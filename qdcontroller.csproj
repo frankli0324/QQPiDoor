@@ -6,7 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="cqhttp.Cyan" Version="1.0.4" />
+    <Reference Include="cqhttp.Cyan">
+      <HintPath>../cqhttp.Cyan/src/bin/Debug/netcoreapp2.1/cqhttp.Cyan.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.JSON" Version="12.0.1" />
+  </ItemGroup>
 </Project>
