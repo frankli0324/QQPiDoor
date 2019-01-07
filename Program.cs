@@ -37,13 +37,14 @@ namespace qdcontroller {
         static void LoadRegisterList () {
             string regListArray =
                 File.ReadAllText ("reglist.json");
-            for (int i = 0; i < regListArray.Length;) {
+            for (; regListArray.Length > 2;) {
                 int semicolonPos = regListArray.IndexOf (';');
+                Console.WriteLine (regListArray.Substring (0, semicolonPos));
                 var j = JToken
                     .Parse (regListArray.Substring (0, semicolonPos))
-                    .ToObject < (long, string) > ();
-                registerList.Add (j.Item1, j.Item2);
-                i = semicolonPos + 1;
+                    .ToObject < KeyValuePair<long, string> > ();
+                registerList.Add (j.Key, j.Value);
+                regListArray = regListArray.Substring (semicolonPos + 1);
             }
         }
         static Regex macReg = new Regex ("([0-9A-f]{2}:){5}[0-9A-f]{2}");
@@ -53,7 +54,7 @@ namespace qdcontroller {
                 registerList.Add (qq_id, mac_addr);
             else registerList[qq_id] = mac_addr;
 
-            File.WriteAllText ("reglist.json", $"{{\"{qq_id}\",\"{mac_addr}\"}};");
+            File.WriteAllText ("reglist.json", $"{{\"{qq_id}\":\"{mac_addr}\"}};");
             return true;
         }
 
