@@ -20,7 +20,6 @@ namespace qdcontroller {
 
     class Program {
         static string help = "you forgot to set the env variable";
-        static Dictionary<long, string> registerList = new Dictionary<long, string> ();
         static void LogToConsole ( // logs are colorful
             string message,
             ConsoleColor textColor
@@ -29,49 +28,17 @@ namespace qdcontroller {
             Console.WriteLine (message);
             Console.ResetColor ();
         }
-        static void EnsureExist () {
-            if (!File.Exists ("reglist.json")) {
-                File.Create ("reglist.json").Close ();
-            }
-        }
-        static void LoadRegisterList () {
-            string regListArray =
-                File.ReadAllText ("reglist.json");
-            for (; regListArray.Length > 2;) {
-                int semicolonPos = regListArray.IndexOf (';');
-                Console.WriteLine (regListArray.Substring (0, semicolonPos));
-                var j = JToken
-                    .Parse (regListArray.Substring (0, semicolonPos))
-                    .ToObject < KeyValuePair<long, string> > ();
-                registerList.Add (j.Key, j.Value);
-                regListArray = regListArray.Substring (semicolonPos + 1);
-            }
-        }
-        static Regex macReg = new Regex ("([0-9A-f]{2}:){5}[0-9A-f]{2}");
-        static bool Register (long qq_id, string mac_addr) {
-            if (macReg.IsMatch (mac_addr) == false) return false;
-            if (registerList.ContainsKey (qq_id))
-                registerList.Add (qq_id, mac_addr);
-            else registerList[qq_id] = mac_addr;
 
-            File.WriteAllText ("reglist.json", $"{{\"{qq_id}\":\"{mac_addr}\"}};");
-            return true;
-        }
-
-        static string ApiAddr, ListenPort, LogDebug, AuthURL;
+        static string ApiAddr, ListenPort, AuthURL;
         static void Main (string[] args) {
-            EnsureExist ();
             ApiAddr = args[0].Length != 0 ?
                 args[0] : System.Environment.GetEnvironmentVariable ("API_ADDR");
             ListenPort = args[1].Length != 0 ?
                 args[1] : System.Environment.GetEnvironmentVariable ("LISTEN_PORT");
             AuthURL = args[2].Length != 0 ?
                 args[2] : System.Environment.GetEnvironmentVariable ("AUTH_URL");
-            LogDebug = System.Environment.GetEnvironmentVariable ("IS_DEBUG");
+            MacChecker.LoadRegisterList ();
 
-            LoadRegisterList ();
-            if (!(LogDebug is null))
-                Logger.verbosity_level = Verbosity.DEBUG;
             if (false && (ApiAddr is null || ListenPort is null || AuthURL is null)) {
                 Console.WriteLine (help);
                 return;
@@ -89,7 +56,7 @@ namespace qdcontroller {
                 if (message.data[0].type == "text" &&
                     message.data[0].data["text"].StartsWith ("register")
                 ) {
-                    if (!Register (sender.user_id, message.data[0].data["text"].Substring (9))) {
+                    if (!MacChecker.Register (sender.user_id, message.data[0].data["text"].Substring (9))) {
                         await CQCli.SendTextAsync (
                             MessageType.private_,
                             sender.user_id, "mac地址的格式好像不太对emmmmmmm"
@@ -117,8 +84,7 @@ namespace qdcontroller {
                 );
 
                 ///////////////////////////begin online check///////////////////////////////
-                bool isOnline = false;
-                if (!registerList.ContainsKey (sender.user_id)) {
+                if (!MacChecker.Registered (sender.user_id)) {
                     LogToConsole ($"unregistered", ConsoleColor.Cyan);
 
                     await CQCli.SendTextAsync (
@@ -131,11 +97,12 @@ register {设备的mac地址}
                     );
                     return new EmptyResponse ();
                 }
+                bool isOnline = false;
                 using (var i = new HttpClient ()) {
                     var onlineArr = JArray.Parse (await i.GetStringAsync (AuthURL));
                     //Console.WriteLine(onlineArr["mac"]);
                     foreach (var item in onlineArr) {
-                        if (registerList[sender.user_id].ToLower () == item["mac"].ToString ().ToLower ()) {
+                        if (MacChecker.MacUppercase (sender.user_id) == item["mac"].ToString ()) {
                             isOnline = true;
                             break;
                         }
@@ -146,7 +113,7 @@ register {设备的mac地址}
                     await CQCli.SendTextAsync (
                         MessageType.private_,
                         sender.user_id,
-                        $"恶人!\n(你的mac地址:{registerList[sender.user_id]}"
+                        $"恶人!\n(你的mac地址:{MacChecker.MacUppercase(sender.user_id)}"
                     );
                     LogToConsole ("request blocked", ConsoleColor.DarkRed);
                     return new EmptyResponse ();
@@ -154,7 +121,7 @@ register {设备的mac地址}
                 ///////////////////////////////////////////////////////////////////
                 ///////////////////////////////////////////////////////////////////
                 ///////////////////////////////////////////////////////////////////
-                var useless_variable = OpenDoor ();
+                var useless_variable = DoorKeeper.OpenDoor ();
                 ///////////////////////////all clear///////////////////////////////
                 ///////////////////////////////////////////////////////////////////
                 ///////////////////////////////////////////////////////////////////
@@ -166,38 +133,8 @@ register {设备的mac地址}
                 return new EmptyResponse ();
             };
             Console.WriteLine ("press enter to exit");
+            MacChecker.GracefulExit ();
             Console.ReadLine ();
-        }
-        static object door_lock = new object ();
-        static Random random = new Random (9123);
-        static void OperateGPIO (string dest, string value) {
-            File.WriteAllText ("/sys/class/gpio/" + dest, value);
-        }
-        static async Task OpenDoor () {
-            await Task.Run (() => {
-                lock (door_lock) {
-                    if (!Directory.Exists ("/sys/class/gpio/gpio26")) {
-                        Logger.Log (Verbosity.DEBUG, "export gpio 26");
-                        OperateGPIO ("export", "26");
-                    }
-                    Console.WriteLine (random.Next (2) == 0 ? "Hacker time!QwQ" : "Open, Sesame!");
-
-                    OperateGPIO ("gpio26/direction", "out");
-
-                    OperateGPIO ("gpio26/value", "0");
-                    System.Threading.Thread.Sleep (500);
-                    OperateGPIO ("gpio26/value", "1");
-                    System.Threading.Thread.Sleep (500);
-                    OperateGPIO ("gpio26/value", "0");
-                    System.Threading.Thread.Sleep (500);
-                    OperateGPIO ("gpio26/value", "1");
-
-                    if (Directory.Exists ("/sys/class/gpio/gpio26")) {
-                        Logger.Log (Verbosity.DEBUG, "unexport gpio 26");
-                        OperateGPIO ("unexport", "26");
-                    }
-                }
-            });
         }
     }
 
