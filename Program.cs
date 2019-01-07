@@ -31,15 +31,17 @@ namespace qdcontroller {
 
         static string ApiAddr, ListenPort, AuthURL;
         static void Main (string[] args) {
-            ApiAddr = args[0].Length != 0 ?
-                args[0] : System.Environment.GetEnvironmentVariable ("API_ADDR");
-            ListenPort = args[1].Length != 0 ?
-                args[1] : System.Environment.GetEnvironmentVariable ("LISTEN_PORT");
-            AuthURL = args[2].Length != 0 ?
-                args[2] : System.Environment.GetEnvironmentVariable ("AUTH_URL");
+            if (args.Length == 3) {
+                ApiAddr = args[0];
+                ListenPort = args[1];
+                AuthURL = args[2];
+            } else {
+                ApiAddr = System.Environment.GetEnvironmentVariable ("API_ADDR");
+                AuthURL = System.Environment.GetEnvironmentVariable ("AUTH_URL");
+                ListenPort = System.Environment.GetEnvironmentVariable ("LISTEN_PORT");
+            }
             MacChecker.LoadRegisterList ();
-
-            if (false && (ApiAddr is null || ListenPort is null || AuthURL is null)) {
+            if (ApiAddr is null || ListenPort is null || AuthURL is null) {
                 Console.WriteLine (help);
                 return;
             }
@@ -92,18 +94,25 @@ namespace qdcontroller {
                         sender.user_id,
                         @"要开门可是要注册的= =
 注册格式:
-register {设备的mac地址}
+register {设备的mac地址}(不带大括号)
 多次注册会覆盖上次的请求"
                     );
                     return new EmptyResponse ();
                 }
                 bool isOnline = false;
                 using (var i = new HttpClient ()) {
-                    var onlineArr = JArray.Parse (await i.GetStringAsync (AuthURL));
+                    Console.WriteLine ("requesting");
+                    string authResponse;
+
+                    authResponse = await i.GetStringAsync (AuthURL);
+                    Console.WriteLine ("router replied");
+                    var onlineArr = JArray.Parse (authResponse);
                     //Console.WriteLine(onlineArr["mac"]);
+                    string userMac = MacChecker.MacUppercase (sender.user_id);
                     foreach (var item in onlineArr) {
-                        if (MacChecker.MacUppercase (sender.user_id) == item["mac"].ToString ()) {
+                        if (userMac == item["mac"].ToString ()) {
                             isOnline = true;
+                            LogToConsole ("MAC Hit!", ConsoleColor.Yellow);
                             break;
                         }
                     }
@@ -128,7 +137,7 @@ register {设备的mac地址}
                 await Api.SendTextAsync (
                     MessageType.private_,
                     (e as PrivateMessageEvent).sender.user_id,
-                    "走勒 您"
+                    "走嘞! 您"
                 );
                 return new EmptyResponse ();
             };
