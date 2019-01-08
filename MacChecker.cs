@@ -32,9 +32,8 @@ namespace qdcontroller {
         public static bool Register (long qq_id, string mac_addr) {
             EnsureExist ();
             if (macReg.IsMatch (mac_addr) == false) return false;
-            registerList[qq_id] = mac_addr;
-
-            File.WriteAllText ("reglist.json", $"{{\"qq\":{qq_id},\"mac\":\"{mac_addr}\"}};");
+            registerList[qq_id] = macReg.Match (mac_addr).Groups[0].Value;
+            File.AppendAllText ("reglist.json", $"{{\"qq\":{qq_id},\"mac\":\"{registerList[qq_id]}\"}};");
             return true;
         }
         public static bool Registered (long qq_id) => registerList.ContainsKey (qq_id);
@@ -42,7 +41,7 @@ namespace qdcontroller {
         public static void GracefulExit () {
             File.Create ("reglist.json").Close ();
             foreach (var i in registerList)
-                File.WriteAllText ("reglist.json", $"{{\"qq\":{i.Key},\"mac\":\"{i.Value}\"}};");
+                File.AppendAllText ("reglist.json", $"{{\"qq\":{i.Key},\"mac\":\"{i.Value}\"}};");
 
         }
     }

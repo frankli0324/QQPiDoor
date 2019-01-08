@@ -48,8 +48,8 @@ namespace qdcontroller {
             //////////////////////////env check finished///////////////////////////////////
             var CQCli = new CQHTTPClient (
                 accessUrl: ApiAddr,
-                listen_port: int.Parse (ListenPort),
-                secret: "bighacker"
+                listen_port: int.Parse (ListenPort)
+                //secret: "bighacker"
             );
             CQCli.OnEventAsync += async (Api, e) => {
                 if (!(e is PrivateMessageEvent)) return new EmptyResponse ();
