@@ -5,9 +5,7 @@ using Newtonsoft.Json.Linq;
 namespace qdcontroller {
 
     class Program {
-        static string help = "you forgot to set the env variable";
-        static string ConfigFilePath = "/home/pi/door.conf";
-        
+
         public static void LogToConsole ( // logs are colorful
             string message,
             ConsoleColor textColor
@@ -70,8 +68,10 @@ register {设备的mac地址}(不带大括号)
             return "走嘞! 您";
         }
         static void Main (string[] args) {
+            Config.Load ();
             MacChecker.LoadRegisterList ();
-            QQPart.Load ();TGPart.Load();
+            QQPart.Load ();
+            TGPart.Load ();
             Console.WriteLine ("press enter to exit");
             MacChecker.GracefulExit ();
             Console.ReadLine ();
