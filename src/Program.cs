@@ -73,8 +73,9 @@ register {设备的mac地址}(不带大括号)
             QQPart.Load ();
             TGPart.Load ();
             Console.WriteLine ("press enter to exit");
-            MacChecker.GracefulExit ();
+            
             Console.ReadLine ();
+            MacChecker.GracefulExit ();
         }
     }
 
