@@ -11,7 +11,7 @@ namespace qdcontroller {
                 File.Create ("reglist.json").Close ();
             }
         }
-        static Dictionary<long, string> registerList = new Dictionary<long, string> ();
+        static Dictionary<string, string> registerList = new Dictionary<string, string> ();
 
         public static void LoadRegisterList () {
             EnsureExist ();
@@ -22,22 +22,22 @@ namespace qdcontroller {
 
                 var j = JToken
                     .Parse (regListArray.Substring (0, semicolonPos));
-                Console.WriteLine ($"loaded:{j["qq"].ToObject<long> ()}:{j["mac"].ToString ()}");
-                registerList[j["qq"].ToObject<long> ()] = j["mac"].ToObject<string> ();
+                Console.WriteLine ($"loaded:{j["qq"].ToObject<string> ()}:{j["mac"].ToString ()}");
+                registerList[j["qq"].ToObject<string> ()] = j["mac"].ToObject<string> ();
                 regListArray = regListArray.Substring (semicolonPos + 1);
             }
         }
         static Regex macReg = new Regex ("([0-9A-f]{2}:){5}[0-9A-f]{2}");
 
-        public static bool Register (long qq_id, string mac_addr) {
+        public static bool Register (string id, string mac_addr) {
             EnsureExist ();
             if (macReg.IsMatch (mac_addr) == false) return false;
-            registerList[qq_id] = macReg.Match (mac_addr).Groups[0].Value;
-            File.AppendAllText ("reglist.json", $"{{\"qq\":{qq_id},\"mac\":\"{registerList[qq_id]}\"}};");
+            registerList[id] = macReg.Match (mac_addr).Groups[0].Value;
+            File.AppendAllText ("reglist.json", $"{{\"qq\":{id},\"mac\":\"{registerList[id]}\"}};");
             return true;
         }
-        public static bool Registered (long qq_id) => registerList.ContainsKey (qq_id);
-        public static string MacUppercase (long qq_id) => registerList[qq_id].ToUpper ();
+        public static bool Registered (string id) => registerList.ContainsKey (id);
+        public static string MacUppercase (string id) => registerList[id].ToUpper ();
         public static void GracefulExit () {
             File.Create ("reglist.json").Close ();
             foreach (var i in registerList)
