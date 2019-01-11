@@ -39,8 +39,12 @@ namespace qdcontroller {
                 return
                 @"要开门可是要注册的= =
 注册格式:
-register {设备的mac地址}(不带大括号)
-多次注册会覆盖上次的请求";
+register {设备的mac地址或你的设备名}(不带大括号)
+
+*  多次注册会覆盖上次的请求
+** 设备名可以允许一定的错误，但输入的设备名与真实设备名的<编辑距离>不能超过3
+** 比如若你的设备名为qwert，那你可以输入qwe(2),qwasf(2),qwer(1),qe(3)
+***。。。是不是设备名也没几个人会记。。。。。。。";
             }
             bool isOnline = false;
             using (var i = new HttpClient ()) {
@@ -73,7 +77,7 @@ register {设备的mac地址}(不带大括号)
             QQPart.Load ();
             TGPart.Load ();
             Console.WriteLine ("press enter to exit");
-            
+
             Console.ReadLine ();
             MacChecker.GracefulExit ();
         }
