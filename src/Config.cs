@@ -11,7 +11,7 @@ namespace qdcontroller {
         [JsonProperty ("AUTH_URL")] public string AuthURL;
         [JsonProperty ("TG_TOKEN")] public string TGToken;
         [JsonProperty ("PROXY_PORT")] public int ProxyPort;
-        static string ConfigFilePath = "/home/pi/door.conf";
+        static string ConfigFilePath = "door.conf";
         public static Config global;
         public static void Load () {
             string conf = File.ReadAllText (ConfigFilePath);

@@ -1,6 +1,7 @@
 using MihaZupan;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace qdcontroller {
     public class TGPart {
@@ -17,7 +18,7 @@ namespace qdcontroller {
                 else text_message = "some_message";
                 await client.SendTextMessageAsync (
                     m.Message.Chat.Id,
-                    Program.OnTextMessage ("TG" + m.Message.From.Id, text_message)
+                    Program.OnTextMessage ("TG" + m.Message.From.Id, text_message),replyMarkup:new ReplyKeyboardMarkup(new KeyboardButton("开门!"))
                 );
             };
             client.StartReceiving ();
