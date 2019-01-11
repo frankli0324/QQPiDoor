@@ -30,7 +30,7 @@
 于是 @nenmao 师傅提出应当添加鉴权步骤。  
 于是有了[commit 1ffd495](https://github.com/frankli0324/QQPiDoor/blob/1ffd495bd21e437bb7615357fa7c767874c9ddf6/Program.cs#L88)， 经过重构后得到[commit c38d97c](https://github.com/frankli0324/QQPiDoor/blob/c38d97ca41feeb4b6f33bdabde4779a78beefe8b/MacChecker.cs)  
 
-```flow
+```flowchart
 st=>start: Start
 op1=>operation: QQ bot收到消息
 isRegister=>condition: 开头不是
